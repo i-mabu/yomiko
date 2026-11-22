@@ -4,7 +4,7 @@ Discordの会話をVOICEVOXで読み上げるBotです。
 
 元リポジトリ `inumabu/yomiage`（Go製 v5.3.6）を、TypeScript + discord.js 1プロセスで完全リニューアルしたものです。logbot / mabubot と同じ流儀（Node標準SQLite、上書き式コマンド同期、pm2起動）に統一しています。
 
-## 特徴
+## ✨ 特徴
 
 - VCのテキストチャンネルを自動で読み上げ（キュー付き、最大30件）
 - VOICEVOX Engine（`audio_query` → `synthesis`）で音声合成
@@ -24,7 +24,7 @@ Discordの会話をVOICEVOXで読み上げるBotです。
 - Botに必要なIntent: Guilds、Guild Messages、**Message Content**（特権インテント。Developer Portalで有効化すること）、Guild Voice States
 - Botに必要な権限: VCへの接続・発言、メッセージ送信、Embed送信
 
-## セットアップ
+## 🚀 セットアップ
 
 ```bash
 git clone https://github.com/inumabu/yomiko.git
@@ -40,7 +40,7 @@ npm run sync:commands   # スラッシュコマンドを上書き同期（初回
 
 > コマンド同期は `npm run sync:commands` が唯一の登録場所です。Bot起動時に自動同期はしません。`DISCORD_GUILD_ID` を指定するとそのサーバーへ同期（開発中の即時反映用）、未指定ならグローバル同期です。コマンドをすべて削除するには `npm run clear:commands` を使います。
 
-## 起動
+## 🚀 起動
 
 ```bash
 npm start
@@ -64,7 +64,7 @@ npm start
 | `YOMIKO_MAX_AUDIO_BYTES`     |               `33554432` | 1音声ファイルの上限（バイト）                               |
 | `YOMIKO_AUTO_LEAVE_DELAY_MS` |                  `60000` | VCにBotだけになってから自動退出するまでの待ち時間（ミリ秒） |
 
-## コマンド一覧
+## 📝 コマンド一覧
 
 すべてスラッシュコマンドで使えます。`!` 付きのメッセージコマンド（17件）も使えます（返信は公開Embed）。
 
@@ -117,7 +117,7 @@ npm start
 
 Botの返信にはボタン行が付きます: 🎙️ 接続 / 🛑 終了 / 📊 状態 / 📚 キュー / 🧹 全消去。全消去ボタンも管理者専用です。
 
-## 読み上げの仕様
+## 📋 読み上げの仕様
 
 - 対象: BotがVCに接続中で、読み上げがONのサーバーのテキストチャンネルへのメッセージ（Botの発言・DM・`!` コマンドは対象外）
 - 文字数: 正規化後の本文が120文字（ルーン）以内。超えたメッセージは無言で読み飛ばします
@@ -238,6 +238,6 @@ npm run dev         # 開発起動（tsx）
 
 テストは `src/test/` にあります（設定の永続化・除外判定・辞書・正規化・WAV変換・TTSキャッシュ・VOICEVOXモック連携・再生キュー）。
 
-## ライセンス
+## 📄 ライセンス
 
 ライセンスは未定です。元の `inumabu/yomiage` は作者 inumabu のカスタムライセンスで公開されていたため、公開前にライセンス方針を決めて `LICENSE` を追加してください。

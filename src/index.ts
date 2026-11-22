@@ -57,7 +57,7 @@ const players = new PlayerManager({
   cache,
   defaultSpeaker: config.defaultSpeaker,
   maxAudioBytes: config.maxAudioBytes,
-  notifyError: (guildId, channelId, message) => {
+  notifyError: (_guildId, channelId, message) => {
     void client.channels
       .fetch(channelId)
       .then((ch) => {
