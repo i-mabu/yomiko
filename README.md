@@ -4,6 +4,8 @@ Discordの会話をVOICEVOXで読み上げるBotです。
 
 元リポジトリ `inumabu/yomiage`（Go製 v5.3.6）を、TypeScript + discord.js 1プロセスで完全リニューアルしたものです。logbot / mabubot と同じ流儀（Node標準SQLite、上書き式コマンド同期、pm2起動）に統一しています。
 
+📜 更新履歴: [CHANGELOG.md](CHANGELOG.md)
+
 ## ✨ 特徴
 
 - VCのテキストチャンネルを自動で読み上げ（キュー付き、最大30件）
