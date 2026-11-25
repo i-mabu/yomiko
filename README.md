@@ -95,7 +95,7 @@ Botの返信にはボタン行が付きます: 🎙️ 接続 / 🛑 終了 / �
 
 
 ```bash
-git clone https://github.com/inumabu/yomiko.git
+git clone https://github.com/i-mabu/yomiko.git
 cd yomiko
 cp .env.example .env
 # .env を編集して DISCORD_TOKEN / DISCORD_APPLICATION_ID を入れる
@@ -162,7 +162,7 @@ sudo apt install -y nodejs
 sudo npm install -g pm2
 
 # Botを配置してビルド・コマンド同期
-git clone https://github.com/inumabu/yomiko.git ~/yomiko
+git clone https://github.com/i-mabu/yomiko.git ~/yomiko
 cd ~/yomiko
 cp .env.example .env   # トークン等を入れる
 npm ci
