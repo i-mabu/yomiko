@@ -20,7 +20,7 @@ export function registerEvents(client: Client, ctx: CommandContext): void {
       if (message.author.bot) return;
       if (!message.guildId || !message.guild) return;
       if (message.content.startsWith("!")) {
-        // `!` コマンドは読み上げない（未知のコマンドも含む）。
+        // 🔇 `!` コマンドは読み上げない（未知のコマンドも含む）。
         await handleMessageCommand(message, ctx);
         return;
       }
