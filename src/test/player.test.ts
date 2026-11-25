@@ -26,7 +26,7 @@ function makeDeps(): {
 } {
   const dir = mkdtempSync(join(tmpdir(), "yomiko-player-test-"));
   const store = new YomikoStore(join(dir, "data"), 3);
-  // 未使用の URL。テストでは VOICEVOX は呼ばれない。
+  // 🧪 未使用の URL。テストでは VOICEVOX は呼ばれない。
   const voicevox = new VoicevoxClient("http://127.0.0.1:1");
   const cache = new TtsCache(join(dir, "cache"), {
     ttlMs: 60_000,

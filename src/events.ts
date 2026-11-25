@@ -1,3 +1,7 @@
+// ==========================================
+// 📡 Discord イベント処理
+// ==========================================
+
 import { EmbedBuilder, type Client, type Guild } from "discord.js";
 import { normalizeText, runeLength } from "./normalize.js";
 import {
@@ -20,7 +24,7 @@ export function registerEvents(client: Client, ctx: CommandContext): void {
         await handleMessageCommand(message, ctx);
         return;
       }
-      // 自動読み上げ
+      // 💬 自動読み上げ
       const player = ctx.players.get(message.guildId);
       if (!player || !player.status.connected) return;
       const settings = ctx.store.getGuildSettings(message.guildId);
@@ -40,7 +44,7 @@ export function registerEvents(client: Client, ctx: CommandContext): void {
       );
       if (!text) return;
       if (runeLength(text) > 120) return;
-      // 満杯でも無言で無視する。
+      // ⚠️ 満杯でも無言で無視する。
       player.enqueue(text, message.author.id);
     } catch (error) {
       console.error("[yomiko] messageCreate の処理に失敗しました:", error);
@@ -64,7 +68,7 @@ export function registerEvents(client: Client, ctx: CommandContext): void {
         .setColor(EMBED_COLOR_ERROR)
         .setFooter({ text: "🔊 よみこ" })
         .setTimestamp(new Date());
-      // defer 済みの場合は reply() できないため editReply でエラーを確定させる
+      // ⏳ defer 済みの場合は reply() できないため editReply でエラーを確定させる
       // （以前はここで return してしまい、応答が「考え中」のまま残っていた）。
       if (interaction.deferred) {
         await interaction.editReply({ embeds: [embed] }).catch(() => undefined);
@@ -76,14 +80,14 @@ export function registerEvents(client: Client, ctx: CommandContext): void {
     }
   });
 
-  // VCにBotだけになったときの自動退出タイマーを開始する。
+  // 🚪 VCにBotだけになったときの自動退出タイマーを開始する。
   const scheduleAutoLeave = (guildId: string): void => {
     const player = ctx.players.get(guildId);
     if (!player) return;
     player.startAutoLeaveTimer(ctx.config.autoLeaveDelayMs, () => {
       const current = ctx.players.get(guildId);
       if (!current || !current.status.connected) return;
-      // leave() で notifyChannelId が消えるため、先に控えておく。
+      // 🧹 leave() で notifyChannelId が消えるため、先に控えておく。
       const notifyChannelId = current.notifyChannelId;
       current.leave();
       if (notifyChannelId) {
@@ -103,7 +107,7 @@ export function registerEvents(client: Client, ctx: CommandContext): void {
     });
   };
 
-  // 指定チャンネルにいる Bot 以外のメンバー数（チャンネルが取れなければ 0）。
+  // 💬 指定チャンネルにいる Bot 以外のメンバー数（チャンネルが取れなければ 0）。
   const humanCountIn = (guild: Guild, channelId: string): number => {
     const channel = guild.channels.cache.get(channelId);
     if (!channel?.isVoiceBased()) return 0;
@@ -116,12 +120,12 @@ export function registerEvents(client: Client, ctx: CommandContext): void {
       const isBotSelf = newState.member?.id === client.user?.id;
       if (isBotSelf) {
         const player = ctx.players.get(guildId);
-        // (a) Bot自身の切断。player があれば後始末する。
+        // 🚪 (a) Bot自身の切断。player があれば後始末する。
         if (newState.channelId == null) {
           if (player) player.leave();
           return;
         }
-        // (a2) Botが別VCへ移動させられた場合、player が保持するチャンネルIDを
+        // 🚪 (a2) Botが別VCへ移動させられた場合、player が保持するチャンネルIDを
         // 実態に合わせ、移動先の人数で自動退出を再評価する。
         // 以前は移動を無視していたため、自動退出判定が旧チャンネルを見続けていた。
         if (
@@ -141,14 +145,14 @@ export function registerEvents(client: Client, ctx: CommandContext): void {
       if (!player || !player.status.connected) return;
       const vcId = player.channelId;
       if (!vcId) return;
-      // (b) Botの接続中VCに誰かが参加したら自動退出タイマーを止める。
+      // 🚪 (b) Botの接続中VCに誰かが参加したら自動退出タイマーを止める。
       if (newState.channelId === vcId && oldState.channelId !== vcId) {
         if (newState.member && !newState.member.user.bot) {
           player.cancelAutoLeaveTimer();
         }
         return;
       }
-      // (c) Botの接続中VCから誰かが出て、Bot以外のメンバーが0人になったら
+      // 🚪 (c) Botの接続中VCから誰かが出て、Bot以外のメンバーが0人になったら
       // 自動退出タイマーを開始する。
       if (oldState.channelId === vcId && newState.channelId !== vcId) {
         if (humanCountIn(newState.guild, vcId) === 0) {

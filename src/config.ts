@@ -1,5 +1,8 @@
 import { join } from "node:path";
 
+// ==========================================
+// ⚙️ 環境変数
+// ==========================================
 // yomiko の環境変数を読み取り、正規化して返す。
 // 秘密情報（DISCORD_TOKEN 等）の実値はここには書かない。
 export interface YomikoConfig {
@@ -23,7 +26,7 @@ export const DEFAULT_CACHE_MAX_BYTES = 268435456; // 256MiB
 export const DEFAULT_MAX_AUDIO_BYTES = 33554432; // 32MiB
 export const DEFAULT_AUTO_LEAVE_DELAY_MS = 60_000;
 
-// "168h" / "30m" / "7d" / "1000"（ミリ秒の数値）を受け付ける。
+// 🔢 "168h" / "30m" / "7d" / "1000"（ミリ秒の数値）を受け付ける。
 // 不正な値は fallbackMs を返す。
 export function parseDurationMs(
   value: string | undefined,
@@ -48,7 +51,7 @@ export function parseDurationMs(
 function parseIntEnv(value: string | undefined, fallback: number): number {
   if (!value) return fallback;
   const trimmed = value.trim();
-  // 空白のみの値は Number('') === 0 になってしまい、上限が 0（＝音声上限なら
+  // 🔢 空白のみの値は Number('') === 0 になってしまい、上限が 0（＝音声上限なら
   // 全件失敗、キャッシュ上限なら無制限）に化けるため、未設定として扱う。
   if (!trimmed) return fallback;
   const n = Number(trimmed);
@@ -77,7 +80,7 @@ export function loadConfig(): YomikoConfig {
   const voicevoxUrl = (
     process.env.VOICEVOX_URL?.trim() || DEFAULT_VOICEVOX_URL
   ).replace(/\/+$/, "");
-  // スキーム漏れ等の設定ミスは、起動時に分かりやすく落とす
+  // ⚙️ スキーム漏れ等の設定ミスは、起動時に分かりやすく落とす
   // （従来は再生のたびに「接続できませんでした」になっていた）。
   let parsedVoicevoxUrl: URL;
   try {

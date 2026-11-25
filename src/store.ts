@@ -2,6 +2,9 @@ import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { DatabaseSync, type StatementSync } from "node:sqlite";
 
+// ==========================================
+// 💾 永続化設定
+// ==========================================
 // yomiko の永続化設定。Node 標準 SQLite（node:sqlite）を使う。
 // 元の settings.json の内容をそのまま SQLite 化したもの。
 export interface GuildSettings {
@@ -38,7 +41,7 @@ export class YomikoStore {
   private db: DatabaseSync;
   private defaultSpeaker: number;
   private closed = false;
-  // prepare 済み文のキャッシュ。メッセージごとの判定（isExcluded 等）で
+  // 💾 prepare 済み文のキャッシュ。メッセージごとの判定（isExcluded 等）で
   // 同じ SQL を毎回パースし直さないようにする。
   private statements = new Map<string, StatementSync>();
 
@@ -186,7 +189,7 @@ export class YomikoStore {
     const rows = this.stmt(
       "SELECT channel_id AS channelId, mode FROM guild_channels WHERE guild_id = ? ORDER BY mode, channel_id",
     ).all(guildId) as Array<{ channelId: string; mode: ChannelMode }>;
-    // node:sqlite の行はプロトタイプが特殊なため、プレーンなオブジェクトに変換する
+    // 📌 node:sqlite の行はプロトタイプが特殊なため、プレーンなオブジェクトに変換する
     return rows.map((r) => ({ channelId: r.channelId, mode: r.mode }));
   }
 
@@ -210,7 +213,7 @@ export class YomikoStore {
     }
   }
 
-  // 除外判定（元の isExcluded と同じ優先順）:
+  // 🚫 除外判定（元の isExcluded と同じ優先順）:
   // ①禁止ユーザー → ②禁止チャンネル → ③許可チャンネルが1件以上あり当該チャンネルが未登録
   isExcluded(guildId: string, channelId: string, userId: string): boolean {
     if (this.isUserBlocked(guildId, userId)) return true;
@@ -294,7 +297,7 @@ export class YomikoStore {
     const rows = this.stmt(
       "SELECT guild_id AS guildId, word, reading FROM dict WHERE guild_id = ? ORDER BY word",
     ).all(guildId) as unknown as DictEntry[];
-    // node:sqlite の行はプロトタイプが特殊なため、プレーンなオブジェクトに変換する
+    // 📌 node:sqlite の行はプロトタイプが特殊なため、プレーンなオブジェクトに変換する
     return rows.map((r) => ({
       guildId: r.guildId,
       word: r.word,

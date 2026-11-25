@@ -22,7 +22,7 @@ function tempDir(): string {
   return mkdtempSync(join(tmpdir(), "yomiko-test-"));
 }
 
-// 16bit PCM WAV を組み立てるテスト用ヘルパー
+// 🧪 16bit PCM WAV を組み立てるテスト用ヘルパー
 function makeWav(
   sampleRate: number,
   channels: number,
@@ -223,7 +223,7 @@ describe("wav", () => {
     assert.equal(pcm.channels, 1);
     assert.equal(pcm.samples.length, 240);
     const out = resampleTo48kStereo(pcm);
-    // 240 frames @24kHz -> 480 frames @48kHz, stereo s16le
+    // 📌 240 frames @24kHz -> 480 frames @48kHz, stereo s16le
     assert.equal(out.length, 480 * 2 * 2);
     const viaHelper = wavToDiscordPcm(wav);
     assert.equal(viaHelper.length, out.length);
@@ -263,11 +263,11 @@ describe("ttsCacheKey / TtsCache", () => {
       const hit = cache.get(key);
       assert.ok(hit);
       assert.equal(readFileSync(hit).length, 60);
-      // TTL超過: mtime を古くする
+      // 📌 TTL超過: mtime を古くする
       const past = new Date(Date.now() - 2000);
       utimesSync(hit, past, past);
       assert.equal(cache.get(key), null);
-      // 容量超過: 60バイト×2件で上限100を超えるので古い方から消える
+      // 🧹 容量超過: 60バイト×2件で上限100を超えるので古い方から消える
       const key2 = ttsCacheKey("テスト2", 3, 1, 1, 0);
       const tmp2 = join(dir, "tmp2.wav");
       writeFileSync(tmp2, Buffer.alloc(60, 2));

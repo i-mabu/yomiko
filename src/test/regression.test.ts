@@ -71,7 +71,7 @@ function makeWavBytes(sampleCount: number): Buffer {
 
 describe("normalizeText dict (regression)", () => {
   it("置換後の読みが別の辞書エントリで再置換されない", () => {
-    // 旧実装（split/join の繰り返し）では 猫→犬 の後に 犬→いぬ が効いて
+    // 📌 旧実装（split/join の繰り返し）では 猫→犬 の後に 犬→いぬ が効いて
     // 「いぬ」になってしまっていた。
     const dict = [
       { word: "猫", reading: "犬" },

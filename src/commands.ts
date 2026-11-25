@@ -1,3 +1,7 @@
+// ==========================================
+// ⌨️ コマンド処理
+// ==========================================
+
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -53,7 +57,7 @@ export async function replyEmbed(
     .setFooter({ text: EMBED_FOOTER })
     .setTimestamp(new Date());
   const rows = components ?? [];
-  // 応答済み・defer 済みの interaction に reply() すると
+  // ⏳ 応答済み・defer 済みの interaction に reply() すると
   // InteractionAlreadyReplied で失敗するため、状態に応じて振り分ける。
   // 時間のかかるコマンド（join / speakers / voicevox）は呼び出し側で
   // deferReply してから処理し、ここで editReply で確定させる。
@@ -83,7 +87,7 @@ export async function sendPublicEmbed(
     .setColor(color)
     .setFooter({ text: EMBED_FOOTER })
     .setTimestamp(new Date());
-  // TextBasedChannel には send を持たない一部チャンネル（PartialGroupDMChannel）が
+  // 💬 TextBasedChannel には send を持たない一部チャンネル（PartialGroupDMChannel）が
   // 含まれるため、send できる場合のみ送る。
   if ("send" in channel) {
     await channel.send({ embeds: [embed], components: components ?? [] });
@@ -120,7 +124,7 @@ export function actionRow(): ActionRowBuilder<ButtonBuilder> {
   );
 }
 
-// メンション解決（キャッシュのみ。表示名が分からなければ normalize 側が
+// 💾 メンション解決（キャッシュのみ。表示名が分からなければ normalize 側が
 // 「メンション」/「チャンネル」に読み替える）。
 export function normalizeResolvers(guild: Guild | null): NormalizeContext {
   return {
@@ -136,7 +140,7 @@ export function getVoiceChannelId(
   return member?.voice.channelId ?? null;
 }
 
-// スラッシュ・ボタン・`!` コマンドで共通の応答口。
+// ⌨️ スラッシュ・ボタン・`!` コマンドで共通の応答口。
 // respond は呼び出し側の返信方法（ephemeral / 公開Embed）を隠す。
 export interface CommandTarget {
   guild: Guild;
@@ -278,7 +282,7 @@ export async function doSay(
     );
     return;
   }
-  // 辞書置換で読みが原文より長くなる場合があるため、正規化後にも上限を確認する
+  // 📝 辞書置換で読みが原文より長くなる場合があるため、正規化後にも上限を確認する
   // （自動読み上げ側は正規化後の長さで判定しており、ここも揃える）。
   if (runeLength(normalized) > 120) {
     await target.respond(
@@ -1283,7 +1287,7 @@ export const yomikoCommands: SlashCommandBuilder[] = [
   new SlashCommandBuilder()
     .setName("ping")
     .setDescription("Botの応答状態を確認します。"),
-  // addXxxOption / addSubcommand を呼ぶと推論型が SlashCommandBuilder では
+  // ⌨️ addXxxOption / addSubcommand を呼ぶと推論型が SlashCommandBuilder では
   // なくなる（discord.js の仕様）ため、配列全体をキャストする。
 ] as unknown as SlashCommandBuilder[];
 
@@ -1331,7 +1335,7 @@ export async function handleChatInputCommand(
   const target = slashTarget(interaction, guild);
   switch (interaction.commandName) {
     case "join":
-      // VC接続の Ready 待ちは Discord の応答期限（3秒）を超えうるため先に defer する。
+      // ⏳ VC接続の Ready 待ちは Discord の応答期限（3秒）を超えうるため先に defer する。
       // defer しないと接続できても応答だけ失敗する（Unknown Interaction）。
       await interaction.deferReply({ ephemeral: true });
       await doJoin(ctx, target);
@@ -1402,7 +1406,7 @@ export async function handleChatInputCommand(
       await doHelp(ctx, target);
       return;
     case "speakers":
-      // VOICEVOX の応答が遅いと応答期限（3秒）を超えるため先に defer する。
+      // 🔊 VOICEVOX の応答が遅いと応答期限（3秒）を超えるため先に defer する。
       await interaction.deferReply({ ephemeral: true });
       await doSpeakers(ctx, target);
       return;
@@ -1462,7 +1466,7 @@ export async function handleChatInputCommand(
       return;
     }
     case "voicevox":
-      // speakers と同様、VOICEVOX の応答待ちで応答期限を超えないよう defer する。
+      // 🔊 speakers と同様、VOICEVOX の応答待ちで応答期限を超えないよう defer する。
       await interaction.deferReply({ ephemeral: true });
       await doVoicevox(ctx, target);
       return;
@@ -1524,7 +1528,7 @@ export async function handleButton(
   const target = buttonTarget(interaction, guild);
   switch (interaction.customId) {
     case "join_button":
-      // スラッシュ版 join と同じく、接続待ちが応答期限を超えうるため defer する。
+      // ⏳ スラッシュ版 join と同じく、接続待ちが応答期限を超えうるため defer する。
       await interaction.deferReply({ ephemeral: true });
       await doJoin(ctx, target);
       return;
@@ -1538,7 +1542,7 @@ export async function handleButton(
       await doQueue(ctx, target);
       return;
     case "clear_button":
-      // 元のGo版では権限チェックが無かった不具合を修正する。
+      // 🔐 元のGo版では権限チェックが無かった不具合を修正する。
       await doClear(ctx, target);
       return;
     default:

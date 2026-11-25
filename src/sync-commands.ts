@@ -2,15 +2,15 @@ import { fileURLToPath } from "node:url";
 import { REST, Routes } from "discord.js";
 import { yomikoCommands } from "./commands.js";
 
-// リポジトリ直下の .env を読み込む（Bot本体・index.ts と同じ扱い）。
+// ⚙️ リポジトリ直下の .env を読み込む（Bot本体・index.ts と同じ扱い）。
 // 既にシェルで export されている値は上書きしない。
 try {
   process.loadEnvFile(fileURLToPath(new URL("../.env", import.meta.url)));
 } catch {
-  // .env が無い場合は環境変数のみで動作する。
+  // ⚙️ .env が無い場合は環境変数のみで動作する。
 }
 
-// Overwrite-sync for application commands.
+// ⌨️ Overwrite-sync for application commands.
 //
 // `npm run sync:commands` is the ONLY place commands are registered.
 // The bot itself never syncs on startup (see index.ts), so a stale

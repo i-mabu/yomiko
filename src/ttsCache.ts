@@ -10,6 +10,9 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 
+// ==========================================
+// 💾 TTSキャッシュ
+// ==========================================
 // TTSキャッシュ。元の yomiage（パッチ0001）の仕様を再現する。
 // キー = SHA-256("v1" + 本文 + 話者 + 音量 + 速度 + ピッチ)。
 // ファイルは <cacheDir>/<sha256hex>.wav。TTL超過・容量超過は mtime の古いものから削除。
@@ -48,7 +51,7 @@ export class TtsCache {
   private cacheDir: string;
   private ttlMs: number;
   private maxBytes: number;
-  // 合成の直列化（低メモリ環境のピーク抑制。元の synthMu 相当）。
+  // 🔊 合成の直列化（低メモリ環境のピーク抑制。元の synthMu 相当）。
   private mutex: Promise<void> = Promise.resolve();
 
   constructor(cacheDir: string, opts: TtsCacheOptions) {
@@ -66,7 +69,7 @@ export class TtsCache {
     return this.ttlMs > 0 && nowMs - mtimeMs >= this.ttlMs;
   }
 
-  // ヒットしたら mtime を更新（LRUの基準は mtime）してパスを返す。
+  // 📌 ヒットしたら mtime を更新（LRUの基準は mtime）してパスを返す。
   get(key: string): string | null {
     const path = this.getPath(key);
     let stat;
@@ -81,19 +84,19 @@ export class TtsCache {
     try {
       utimesSync(path, now, now);
     } catch {
-      // mtime 更新の失敗はヒット扱いのままにする
+      // ⚠️ mtime 更新の失敗はヒット扱いのままにする
     }
     return path;
   }
 
-  // 一時ファイルを正式ファイル名へ原子移動し、GCする。
+  // 🧹 一時ファイルを正式ファイル名へ原子移動し、GCする。
   put(key: string, tmpPath: string): void {
     const dest = this.getPath(key);
     renameSync(tmpPath, dest);
     this.gc(dest);
   }
 
-  // 期限切れの削除 → 容量超過なら mtime の古いものから削除。
+  // 🧹 期限切れの削除 → 容量超過なら mtime の古いものから削除。
   gc(excludePath?: string): void {
     let entries: string[];
     try {
@@ -113,7 +116,7 @@ export class TtsCache {
           const s = statSync(path);
           total += s.size;
         } catch {
-          // 無視
+          // ⚠️ 無視
         }
         continue;
       }
@@ -127,7 +130,7 @@ export class TtsCache {
         try {
           unlinkSync(path);
         } catch {
-          // 無視
+          // ⚠️ 無視
         }
         continue;
       }
@@ -142,13 +145,13 @@ export class TtsCache {
           unlinkSync(info.path);
           total -= info.size;
         } catch {
-          // 無視
+          // ⚠️ 無視
         }
       }
     }
   }
 
-  // キャッシュが無ければ synth(tmpPath) で合成して保存する。合成は直列化する。
+  // 💾 キャッシュが無ければ synth(tmpPath) で合成して保存する。合成は直列化する。
   async ensure(
     key: string,
     synth: (tmpPath: string) => Promise<void>,
@@ -165,7 +168,7 @@ export class TtsCache {
         try {
           unlinkSync(tmpPath);
         } catch {
-          // 無視（synth 側で消している場合もある）
+          // ⚠️ 無視（synth 側で消している場合もある）
         }
         throw error;
       }
@@ -175,18 +178,18 @@ export class TtsCache {
       try {
         this.put(key, tmpPath);
       } catch (error) {
-        // rename 等に失敗した場合は一時ファイルを残さない
+        // ⚠️ rename 等に失敗した場合は一時ファイルを残さない
         // （.tmp は GC 対象外のため、残ると溜まり続ける）。
         try {
           unlinkSync(tmpPath);
         } catch {
-          // 無視
+          // ⚠️ 無視
         }
         throw error;
       }
       return this.getPath(key);
     });
-    // 直列化チェーンが壊れないよう、失敗もチェーンに残さない
+    // ⚠️ 直列化チェーンが壊れないよう、失敗もチェーンに残さない
     this.mutex = run.then(
       () => undefined,
       () => undefined,

@@ -1,3 +1,6 @@
+// ==========================================
+// 🔊 再生層
+// ==========================================
 // yomiko の再生層。ギルドごとの読み上げキューと VC 再生を管理する。
 // VOICEVOX合成 → TTSキャッシュ → WAV→PCM変換 → @discordjs/voice で再生。
 import { readFileSync } from "node:fs";
@@ -22,14 +25,14 @@ import { wavToDiscordPcm } from "./wav.js";
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
-// 再生開始を待つ上限（元の Go 版の文全体 45 秒タイムアウト相当）。
+// 🔊 再生開始を待つ上限（元の Go 版の文全体 45 秒タイムアウト相当）。
 const PLAY_TIMEOUT_MS = 45_000;
-// VC 接続の Ready 待ち上限。
+// ⏳ VC 接続の Ready 待ち上限。
 const JOIN_TIMEOUT_MS = 15_000;
-// 再生失敗時のリトライ回数（初回 + リトライ 1 回 = 最大 2 回試行）と間隔。
+// 🔊 再生失敗時のリトライ回数（初回 + リトライ 1 回 = 最大 2 回試行）と間隔。
 const MAX_PLAY_ATTEMPTS = 2;
 const RETRY_DELAY_MS = 500;
-// キュー空・一時停止中のポーリング間隔。
+// 📋 キュー空・一時停止中のポーリング間隔。
 const EMPTY_QUEUE_WAIT_MS = 100;
 const PAUSED_WAIT_MS = 200;
 
@@ -38,7 +41,7 @@ export interface QueueItem {
   authorId: string;
 }
 
-// 純粋な読み上げキュー。Discord 接続なしでテストできる。
+// 📋 純粋な読み上げキュー。Discord 接続なしでテストできる。
 export class SpeechQueue {
   private items: QueueItem[] = [];
   private pausedFlag = false;
@@ -53,7 +56,7 @@ export class SpeechQueue {
     return this.pausedFlag;
   }
 
-  // 満杯なら false を返し、ブロックしない。
+  // 📌 満杯なら false を返し、ブロックしない。
   enqueue(item: QueueItem): boolean {
     if (this.items.length >= this.capacity) return false;
     this.items.push(item);
@@ -64,19 +67,19 @@ export class SpeechQueue {
     return this.items.shift();
   }
 
-  // 待機中の全件（コピー）。
+  // 📌 待機中の全件（コピー）。
   peekAll(): QueueItem[] {
     return [...this.items];
   }
 
-  // 消した件数を返す。
+  // 📌 消した件数を返す。
   clear(): number {
     const count = this.items.length;
     this.items = [];
     return count;
   }
 
-  // 0 始まり。範囲外は null。
+  // 📌 0 始まり。範囲外は null。
   remove(index: number): QueueItem | null {
     if (index < 0 || index >= this.items.length) return null;
     const [removed] = this.items.splice(index, 1);
@@ -122,7 +125,7 @@ export class GuildPlayer {
   private destroyed = false;
   private joining = false;
   private autoLeaveTimer: NodeJS.Timeout | null = null;
-  // 再生ループの世代。leave/destroy/join で進め、古いループを終了させる。
+  // 🔊 再生ループの世代。leave/destroy/join で進め、古いループを終了させる。
   private loopGeneration = 0;
 
   constructor(guildId: string, deps: PlayerDeps) {
@@ -140,7 +143,7 @@ export class GuildPlayer {
     };
   }
 
-  // 接続中の VC チャンネル ID。未接続は null。
+  // 🚪 接続中の VC チャンネル ID。未接続は null。
   get channelId(): string | null {
     return this.channelIdValue;
   }
@@ -157,7 +160,7 @@ export class GuildPlayer {
     return this.currentTextValue;
   }
 
-  // VC に参加する。既に接続中なら false。
+  // 🚪 VC に参加する。既に接続中なら false。
   // adapterCreator は discord.js の guild.voiceAdapterCreator をそのまま渡す。
   // 型は joinVoiceChannel が要求する DiscordGatewayAdapterCreator へキャストする。
   async join(
@@ -186,7 +189,7 @@ export class GuildPlayer {
         return false;
       }
       const audioPlayer = createAudioPlayer();
-      // AudioPlayer / VoiceConnection は 'error' を emit する。リスナーが無いと
+      // ⚠️ AudioPlayer / VoiceConnection は 'error' を emit する。リスナーが無いと
       // Node の EventEmitter が例外を投げ、プロセスごと落ちるため必ず登録する。
       audioPlayer.on("error", (error) => {
         console.error(
@@ -214,7 +217,7 @@ export class GuildPlayer {
         connection.destroy();
         return false;
       }
-      // Ready 待ちの間に leave/destroy されていたら接続を確定しない。
+      // ⏳ Ready 待ちの間に leave/destroy されていたら接続を確定しない。
       if (this.destroyed) {
         connection.destroy();
         return false;
@@ -231,7 +234,7 @@ export class GuildPlayer {
     }
   }
 
-  // 切断状態になったら、再接続中（Signalling/Connecting）への遷移を少し待ち、
+  // ⏳ 切断状態になったら、再接続中（Signalling/Connecting）への遷移を少し待ち、
   // 戻らなければゾンビ接続を残さず後始末する（@discordjs/voice の推奨パターン）。
   private async handleDisconnected(connection: VoiceConnection): Promise<void> {
     try {
@@ -246,19 +249,19 @@ export class GuildPlayer {
         try {
           connection.destroy();
         } catch {
-          // 破棄中のエラーは無視する
+          // ⚠️ 破棄中のエラーは無視する
         }
       }
     }
   }
 
-  // Bot が管理者の操作等で別VCへ移動させられたときに、保持している
+  // 🚪 Bot が管理者の操作等で別VCへ移動させられたときに、保持している
   // チャンネルIDを実態へ合わせる（自動退出判定が旧チャンネルを見ないように）。
   syncChannelId(channelId: string): void {
     this.channelIdValue = channelId;
   }
 
-  // VC から切断する。未接続なら false。再生ループも終了させる。
+  // 🚪 VC から切断する。未接続なら false。再生ループも終了させる。
   leave(): boolean {
     if (!this.connection) return false;
     this.cleanup();
@@ -270,7 +273,7 @@ export class GuildPlayer {
     return this.queue.enqueue({ text, authorId }) ? "ok" : "full";
   }
 
-  // 再生中の文が無ければ false。あれば AudioPlayer を止めて true（待機キューは残る）。
+  // 📋 再生中の文が無ければ false。あれば AudioPlayer を止めて true（待機キューは残る）。
   skip(): boolean {
     if (!this.currentTextValue) return false;
     this.skipRequested = true;
@@ -280,12 +283,12 @@ export class GuildPlayer {
     return true;
   }
 
-  // 待機キューをすべて破棄する（再生中の文は止めない）。消した件数を返す。
+  // 📋 待機キューをすべて破棄する（再生中の文は止めない）。消した件数を返す。
   clearQueue(): number {
     return this.queue.clear();
   }
 
-  // 0 始まり。範囲外は null。
+  // 📌 0 始まり。範囲外は null。
   removeFromQueue(index: number): QueueItem | null {
     return this.queue.remove(index);
   }
@@ -302,7 +305,7 @@ export class GuildPlayer {
     return this.queue.peekAll();
   }
 
-  // 自動退出タイマー。既存タイマーがあれば置き換える。
+  // 🚪 自動退出タイマー。既存タイマーがあれば置き換える。
   startAutoLeaveTimer(delayMs: number, onTimeout: () => void): void {
     this.cancelAutoLeaveTimer();
     this.autoLeaveTimer = setTimeout(() => {
@@ -318,7 +321,7 @@ export class GuildPlayer {
     }
   }
 
-  // leave と同じ後始末。プロセス終了時用。
+  // 📌 leave と同じ後始末。プロセス終了時用。
   destroy(): void {
     this.destroyed = true;
     this.cleanup();
@@ -336,7 +339,7 @@ export class GuildPlayer {
       try {
         player.stop();
       } catch {
-        // 破棄中のエラーは無視する
+        // ⚠️ 破棄中のエラーは無視する
       }
     }
     const connection = this.connection;
@@ -347,12 +350,12 @@ export class GuildPlayer {
       try {
         connection.destroy();
       } catch {
-        // 破棄中のエラーは無視する
+        // ⚠️ 破棄中のエラーは無視する
       }
     }
   }
 
-  // 接続中かつ破棄されていない間、キューを1件ずつ再生する。
+  // 📋 接続中かつ破棄されていない間、キューを1件ずつ再生する。
   private async playLoop(): Promise<void> {
     const connection = this.connection;
     const generation = this.loopGeneration;
@@ -377,7 +380,7 @@ export class GuildPlayer {
         try {
           let lastError: unknown = null;
           for (let attempt = 0; attempt < MAX_PLAY_ATTEMPTS; attempt++) {
-            // leave/destroy されたらリトライせずループを抜ける。
+            // 🔁 leave/destroy されたらリトライせずループを抜ける。
             if (this.connection !== connection || this.destroyed) {
               lastError = null;
               break;
@@ -393,7 +396,7 @@ export class GuildPlayer {
               break;
             } catch (error) {
               lastError = error;
-              // スキップされた場合はリトライしない。
+              // 🔁 スキップされた場合はリトライしない。
               if (this.skipRequested) {
                 this.skipRequested = false;
                 lastError = null;
@@ -422,7 +425,7 @@ export class GuildPlayer {
           this.currentTextValue = null;
         }
       } catch (error) {
-        // ループ内の例外はログに出し、ループを止めない。
+        // ⚠️ ループ内の例外はログに出し、ループを止めない。
         console.error(
           `[yomiko] 再生ループでエラーが発生しました guild=${this.guildId}:`,
           error,
@@ -431,7 +434,7 @@ export class GuildPlayer {
     }
   }
 
-  // 1文を合成して再生し、再生完了（Idle）まで待つ。
+  // 🔊 1文を合成して再生し、再生完了（Idle）まで待つ。
   private async playItem(item: QueueItem): Promise<void> {
     const settings = this.deps.store.getGuildSettings(this.guildId);
     const userVoice = this.deps.store.getUserVoice(this.guildId, item.authorId);
@@ -448,7 +451,7 @@ export class GuildPlayer {
         this.deps.maxAudioBytes,
       ),
     );
-    // 合成中にスキップされた場合は再生しない。
+    // 🔊 合成中にスキップされた場合は再生しない。
     if (this.skipRequested) {
       this.skipRequested = false;
       return;
@@ -466,17 +469,17 @@ export class GuildPlayer {
       inputType: StreamType.Raw,
     });
     player.play(resource);
-    // スキップ時は stop により Idle になるのでそのまま次へ進む。
+    // ⏭️ スキップ時は stop により Idle になるのでそのまま次へ進む。
     try {
       await entersState(player, AudioPlayerStatus.Idle, PLAY_TIMEOUT_MS);
     } catch (error) {
-      // タイムアウト等で待ちを諦めた場合、再生は止まっていない。
+      // ⏳ タイムアウト等で待ちを諦めた場合、再生は止まっていない。
       // 止めずにリトライすると同じ文が重なって再生されるため、必ず止める
       // （元の Go 版はコンテキストのキャンセルで再生自体が止まっていた）。
       try {
         player.stop();
       } catch {
-        // 破棄中のエラーは無視する
+        // ⚠️ 破棄中のエラーは無視する
       }
       throw error;
     }

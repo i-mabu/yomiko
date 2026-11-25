@@ -1,16 +1,16 @@
 import { fileURLToPath } from "node:url";
 import { REST, Routes } from "discord.js";
 
-// リポジトリ直下の .env を読み込む（Bot本体・index.ts と同じ扱い）。
+// ⚙️ リポジトリ直下の .env を読み込む（Bot本体・index.ts と同じ扱い）。
 // 既にシェルで export されている値は上書きしないため、下記の
 // 「旧アプリの認証情報をシェルでだけ渡す」運用は従来通り可能。
 try {
   process.loadEnvFile(fileURLToPath(new URL("../.env", import.meta.url)));
 } catch {
-  // .env が無い場合は環境変数のみで動作する。
+  // ⚙️ .env が無い場合は環境変数のみで動作する。
 }
 
-// Delete ALL application commands for one application.
+// ⌨️ Delete ALL application commands for one application.
 //
 // Use this when old commands remain after `npm run sync:commands`.
 // Overwrite-sync only replaces the commands of *this* application in
@@ -58,7 +58,7 @@ async function clearScope(label: string, route: `/${string}`): Promise<void> {
     console.log(`${label}: no commands to delete.`);
     return;
   }
-  // PUT [] is a full replacement with an empty set: every command is deleted.
+  // ⌨️ PUT [] is a full replacement with an empty set: every command is deleted.
   await rest.put(route, { body: [] });
   const after = (await rest.get(route)) as Array<{ name: string }>;
   if (after.length) {

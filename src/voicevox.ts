@@ -3,6 +3,9 @@ import { unlink } from "node:fs/promises";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 
+// ==========================================
+// 🔊 VOICEVOX 連携
+// ==========================================
 // VOICEVOX Engine との通信。audio_query → synthesis の2段階。
 // VOICEVOXに接続できなくても例外を投げるだけで、Bot本体は落とさない。
 export interface VoicevoxSpeakerStyle {
@@ -34,7 +37,7 @@ export class VoicevoxError extends Error {
 
 const REQUEST_TIMEOUT_MS = 30_000;
 const SPEAKERS_TIMEOUT_MS = 10_000;
-// 合成音声のダウンロード全体（生成待ち＋受信）に許す上限。
+// 🔊 合成音声のダウンロード全体（生成待ち＋受信）に許す上限。
 // ヘッダだけ届いてボディが止まるケースでも合成待ちのまま固まらないようにする。
 const SYNTH_TIMEOUT_MS = 120_000;
 
@@ -61,7 +64,7 @@ export class VoicevoxClient {
     return this.baseUrl;
   }
 
-  // fetch して、レスポンスボディの消費（handler）まで含めてタイムアウトを効かせる。
+  // ⏳ fetch して、レスポンスボディの消費（handler）まで含めてタイムアウトを効かせる。
   // 以前は fetch の解決時点でタイマーを解除していたため、ヘッダ受信後に
   // ボディが止まると無期限に待ち続けていた（合成の直列化ロックごと全体が停止する）。
   private async fetchWithTimeout<T>(
@@ -89,7 +92,7 @@ export class VoicevoxClient {
     try {
       return await handler(res);
     } catch (error) {
-      // 自分のタイムアウトで中断した場合は、ボディ読み取り側が汎用エラー
+      // ⏳ 自分のタイムアウトで中断した場合は、ボディ読み取り側が汎用エラー
       // （JSONパース失敗など）に化かしていてもタイムアウトとして報告する。
       if (controller.signal.aborted) {
         throw new VoicevoxError(
@@ -154,7 +157,7 @@ export class VoicevoxClient {
     );
   }
 
-  // text を合成し、WAVを destPath へストリーミング保存する。
+  // 🔊 text を合成し、WAVを destPath へストリーミング保存する。
   // maxBytes を超えたら途中のファイルを消してエラーを投げる。
   async synthesizeToFile(
     text: string,
@@ -217,7 +220,7 @@ export class VoicevoxClient {
         if (!res.body) {
           throw new VoicevoxError("VOICEVOXの音声合成の応答が空でした。");
         }
-        // pipeline を使うことで、書き込みエラー（ディスク不足等）の伝播、
+        // ⚠️ pipeline を使うことで、書き込みエラー（ディスク不足等）の伝播、
         // バックプレッシャ、上限超過時の送信元キャンセルまで正しく扱う。
         // 以前の手書きループは WriteStream の 'error' を拾わず、書き込み失敗を
         // 成功と誤認したり、drain 待ちで固まったりする恐れがあった。

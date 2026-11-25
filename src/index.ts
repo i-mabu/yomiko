@@ -1,3 +1,7 @@
+// ==========================================
+// 🤖 Bot 起動
+// ==========================================
+
 import { fileURLToPath } from "node:url";
 import { ActivityType, Client, GatewayIntentBits, Partials } from "discord.js";
 import { loadConfig, type YomikoConfig } from "./config.js";
@@ -12,13 +16,13 @@ import {
 } from "./commands.js";
 import { registerEvents } from "./events.js";
 
-// リポジトリ直下の .env を読み込む（pm2 の ecosystem 経由でない
+// ⚙️ リポジトリ直下の .env を読み込む（pm2 の ecosystem 経由でない
 // `npm start` / `npm run dev` でも README 通りの手順で起動できるように）。
 // 既に環境変数として渡されている値は上書きしない（Node の loadEnvFile の仕様）。
 try {
   process.loadEnvFile(fileURLToPath(new URL("../.env", import.meta.url)));
 } catch {
-  // .env が無い場合は環境変数だけで起動する（従来通りの運用も可能）。
+  // ⚙️ .env が無い場合は環境変数だけで起動する（従来通りの運用も可能）。
 }
 
 let config: YomikoConfig;
@@ -81,9 +85,9 @@ client.once("ready", () => {
   client.user?.setActivity("メッセージの読み上げ", {
     type: ActivityType.Listening,
   });
-  // 起動時キャッシュGC（期限切れ・容量超過の整理）。
+  // 💾 起動時キャッシュGC（期限切れ・容量超過の整理）。
   cache.gc();
-  // コマンドの起動時自動同期はしない。`npm run sync:commands` が
+  // ⌨️ コマンドの起動時自動同期はしない。`npm run sync:commands` が
   // 唯一の登録場所（再起動で削除済みコマンドが復活しないようにする）。
 });
 
@@ -97,7 +101,7 @@ function shutdown(): void {
   try {
     client.destroy();
   } catch {
-    // 破棄中のエラーは無視する
+    // ⚠️ 破棄中のエラーは無視する
   }
   store.close();
   process.exit(0);
